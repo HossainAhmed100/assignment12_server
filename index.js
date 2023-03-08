@@ -1,7 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion, Collection } = require("mongodb");
+const {
+  MongoClient,
+  ServerApiVersion,
+  Collection,
+  ObjectId,
+} = require("mongodb");
 const port = process.env.PORT || 5000;
 
 const app = express();
@@ -19,9 +24,19 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    console.log("DBCooonected");
+    console.log("Mongo Server Connected");
     const productCollection = client.db("products").collection("product");
 
+    app.get("/allproducts", async (req, res) => {
+      const result = await productCollection.find({}).toArray();
+      res.send(result);
+    });
+    app.get("/singleProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    });
     app.post("/addNewProduct", async (req, res) => {
       const data = req.body.product;
       const result = await productCollection.insertOne(data);
