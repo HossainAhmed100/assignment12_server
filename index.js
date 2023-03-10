@@ -26,22 +26,45 @@ async function run() {
     await client.connect();
     console.log("Mongo Server Connected");
     const productCollection = client.db("products").collection("product");
+    const userCollection = client.db("users").collection("user");
 
+    // Get All Products
     app.get("/allproducts", async (req, res) => {
       const result = await productCollection.find({}).toArray();
       res.send(result);
     });
+
+    // Get Single Product with ID
     app.get("/singleProduct/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await productCollection.findOne(query);
       res.send(result);
     });
+
+    // Add New Product
     app.post("/addNewProduct", async (req, res) => {
       const data = req.body.product;
       const result = await productCollection.insertOne(data);
       res.send(result);
     });
+
+    // Register New user
+    app.post("/addNewUser", async (req, res) => {
+      const data = req.body.userInfo;
+      const result = await userCollection.insertOne(data);
+      res.send(result);
+    });
+
+    // Get Signle User by Email
+    app.get("/signleUser/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.put("");
   } finally {
   }
 }
