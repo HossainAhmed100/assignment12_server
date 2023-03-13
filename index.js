@@ -88,14 +88,23 @@ async function run() {
 
     // Get All User reviews
     app.get("/allreviews", async (req, res) => {
-      const result = reviewsCollection.find({}).toArray();
+      const result = await reviewsCollection.find({}).toArray();
       res.send(result);
     });
 
-    app.get("/allreviews/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = reviewsCollection.find(query).toArray();
+    // Get Specific User Reviews
+    app.get("/allreviews/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await reviewsCollection.find(query).toArray();
+
+      res.send(result);
+    });
+
+    // User = Add New Reviews
+    app.post("/addnewreviews/:email", async (req, res) => {
+      const reviews = req.body.reviews;
+      const result = await reviewsCollection.insertOne(reviews);
       res.send(result);
     });
   } finally {
