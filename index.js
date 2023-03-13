@@ -27,6 +27,7 @@ async function run() {
     console.log("Mongo Server Connected");
     const productCollection = client.db("products").collection("product");
     const userCollection = client.db("users").collection("user");
+    const reviewsCollection = client.db("users").collection("reviews");
 
     // Get All Products
     app.get("/allproducts", async (req, res) => {
@@ -64,7 +65,39 @@ async function run() {
       res.send(result);
     });
 
-    app.put("");
+    // Update user Account
+    app.put("/updateUser/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body.userInfo;
+      const query = { email: email };
+
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: user.names,
+          phone: user.phones,
+          address: user.addresss,
+          email: user.email,
+          role: user.role,
+        },
+      };
+      const result = await userCollection.updateOne(query, updateDoc, options);
+      console.log(result);
+      res.send(result);
+    });
+
+    // Get All User reviews
+    app.get("/allreviews", async (req, res) => {
+      const result = reviewsCollection.find({}).toArray();
+      res.send(result);
+    });
+
+    app.get("/allreviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
   } finally {
   }
 }
