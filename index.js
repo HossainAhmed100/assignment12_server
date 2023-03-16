@@ -28,6 +28,7 @@ async function run() {
     const productCollection = client.db("products").collection("product");
     const userCollection = client.db("users").collection("user");
     const reviewsCollection = client.db("users").collection("reviews");
+    const orderCollection = client.db("users").collection("order");
 
     // Get All Products
     app.get("/allproducts", async (req, res) => {
@@ -47,6 +48,21 @@ async function run() {
     app.post("/addNewProduct", async (req, res) => {
       const data = req.body.product;
       const result = await productCollection.insertOne(data);
+      res.send(result);
+    });
+
+    // Place New Order
+    app.post("/placeNewOrder", async (req, res) => {
+      const data = req.body.order;
+      const result = await orderCollection.insertOne(data);
+      res.send(result);
+    });
+
+    // Get Order Data
+    app.get("/getUserOrder/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { userEmail: email };
+      const result = await orderCollection.find(query).toArray();
       res.send(result);
     });
 
