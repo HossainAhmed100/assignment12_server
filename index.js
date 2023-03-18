@@ -1,12 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const {
-  MongoClient,
-  ServerApiVersion,
-  Collection,
-  ObjectId,
-} = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 
 const app = express();
@@ -113,7 +108,6 @@ async function run() {
       const email = req.params.email;
       const query = { email: email };
       const result = await reviewsCollection.find(query).toArray();
-
       res.send(result);
     });
 
