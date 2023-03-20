@@ -53,8 +53,13 @@ async function run() {
       res.send(result);
     });
 
-    // Get Order Data
-    app.get("/getUserOrder/:email", async (req, res) => {
+    // Get All Order Data
+    app.get("/allOrder", async (req, res) => {
+      const result = await orderCollection.find({}).toArray();
+      res.send(result);
+    });
+    // Get User Order Data
+    app.get("/allOrder/:email", async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
       const result = await orderCollection.find(query).toArray();
@@ -73,6 +78,7 @@ async function run() {
       const email = req.params.email;
       const query = { email: email };
       const result = await userCollection.findOne(query);
+
       res.send(result);
     });
 
