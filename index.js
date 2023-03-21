@@ -36,6 +36,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await productCollection.findOne(query);
+      console.log(result);
       res.send(result);
     });
 
@@ -66,6 +67,22 @@ async function run() {
       res.send(result);
     });
 
+    // Get User Order Data
+    app.get("/getUserOrder/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await orderCollection.findOne(query);
+      res.send(result);
+    });
+
+    // Delete Specific User Order
+    app.delete("/allOrder/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await orderCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // Register New user
     app.post("/addNewUser", async (req, res) => {
       const data = req.body.userInfo;
@@ -78,7 +95,6 @@ async function run() {
       const email = req.params.email;
       const query = { email: email };
       const result = await userCollection.findOne(query);
-
       res.send(result);
     });
 
@@ -87,7 +103,6 @@ async function run() {
       const email = req.params.email;
       const user = req.body.userInfo;
       const query = { email: email };
-
       const options = { upsert: true };
       const updateDoc = {
         $set: {
@@ -99,7 +114,6 @@ async function run() {
         },
       };
       const result = await userCollection.updateOne(query, updateDoc, options);
-      console.log(result);
       res.send(result);
     });
 
@@ -117,10 +131,57 @@ async function run() {
       res.send(result);
     });
 
+    // Delete Specific User Reviews
+    app.delete("/allreviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // User = Add New Reviews
     app.post("/addnewreviews/:email", async (req, res) => {
       const reviews = req.body.reviews;
       const result = await reviewsCollection.insertOne(reviews);
+      res.send(result);
+    });
+
+    // <-------------- Admin API -------------->
+
+    app.put("/approveOrder/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          orderStatus: true,
+        },
+      };
+      const result = await orderCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    app.put("/paymentUpdate/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const transactionId = req.body.transactionId;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          transactionId: transactionId,
+          paymentStatus: true,
+        },
+      };
+      const result = await orderCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
   } finally {
