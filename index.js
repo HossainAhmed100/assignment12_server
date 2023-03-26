@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
@@ -16,6 +17,21 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "UnAuthorized Access" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unAuthorized Access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     await client.connect();
@@ -24,6 +40,15 @@ async function run() {
     const userCollection = client.db("users").collection("user");
     const reviewsCollection = client.db("users").collection("reviews");
     const orderCollection = client.db("users").collection("order");
+
+    // Authorization
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        expiresIn: "365d",
+      });
+      res.send({ token });
+    });
 
     // Get All Products
     app.get("/allproducts", async (req, res) => {
@@ -36,7 +61,6 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await productCollection.findOne(query);
-      console.log(result);
       res.send(result);
     });
 
@@ -60,7 +84,11 @@ async function run() {
       res.send(result);
     });
     // Get User Order Data
-    app.get("/allOrder/:email", async (req, res) => {
+    app.get("/allOrder/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
       const email = req.params.email;
       const query = { userEmail: email };
       const result = await orderCollection.find(query).toArray();
