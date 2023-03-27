@@ -91,6 +91,8 @@ async function run() {
     // Get User Order Data
     app.get("/allOrder/:email", verifyJWT, async (req, res) => {
       const decoded = req.decoded;
+      console.log("Decode", decoded);
+      console.log("Email", req.params.email);
       if (decoded.email !== req.params.email) {
         return res.status(401).send({ message: "UnAuthorized Access!" });
       }
