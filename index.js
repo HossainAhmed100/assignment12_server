@@ -57,7 +57,7 @@ async function run() {
     });
 
     // Get Single Product with ID
-    app.get("/singleProduct/:id", async (req, res) => {
+    app.get("/singleProduct/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await productCollection.findOne(query);
@@ -65,14 +65,18 @@ async function run() {
     });
 
     // Add New Product
-    app.post("/addNewProduct", async (req, res) => {
+    app.post("/addNewProduct", verifyJWT, async (req, res) => {
       const data = req.body.product;
       const result = await productCollection.insertOne(data);
       res.send(result);
     });
 
     // Place New Order
-    app.post("/placeNewOrder", async (req, res) => {
+    app.post("/placeNewOrder/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
       const data = req.body.order;
       const result = await orderCollection.insertOne(data);
       res.send(result);
@@ -83,6 +87,7 @@ async function run() {
       const result = await orderCollection.find({}).toArray();
       res.send(result);
     });
+
     // Get User Order Data
     app.get("/allOrder/:email", verifyJWT, async (req, res) => {
       const decoded = req.decoded;
@@ -119,7 +124,11 @@ async function run() {
     });
 
     // Get Signle User by Email
-    app.get("/signleUser/:email", async (req, res) => {
+    app.get("/signleUser/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
       const email = req.params.email;
       const query = { email: email };
       const result = await userCollection.findOne(query);
@@ -127,7 +136,11 @@ async function run() {
     });
 
     // Update user Account
-    app.put("/updateUser/:email", async (req, res) => {
+    app.put("/updateUser/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
       const email = req.params.email;
       const user = req.body.userInfo;
       const query = { email: email };
@@ -152,7 +165,11 @@ async function run() {
     });
 
     // Get Specific User Reviews
-    app.get("/allreviews/:email", async (req, res) => {
+    app.get("/allreviews/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
       const email = req.params.email;
       const query = { email: email };
       const result = await reviewsCollection.find(query).toArray();
@@ -164,11 +181,16 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await reviewsCollection.deleteOne(query);
+      console.log(result);
       res.send(result);
     });
 
     // User = Add New Reviews
-    app.post("/addnewreviews/:email", async (req, res) => {
+    app.post("/addnewreviews/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
       const reviews = req.body.reviews;
       const result = await reviewsCollection.insertOne(reviews);
       res.send(result);
@@ -176,8 +198,26 @@ async function run() {
 
     // <-------------- Admin API -------------->
 
-    app.put("/approveOrder/:id", async (req, res) => {
-      const id = req.params.id;
+    // ALL User
+    app.get("/alluser", async (req, res) => {
+      const result = await userCollection.find({}).toArray();
+      res.send(result);
+    });
+
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      res.send({ isAdmin: user?.role === "Admin" });
+    });
+
+    // Approve Order
+    app.put("/approveOrder/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
+      const id = req.body.id;
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateDoc = {
@@ -193,9 +233,22 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/paymentUpdate/:id", async (req, res) => {
+    // Delete Specific Product
+    app.delete("/deleteProduct/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.deleteOne(query);
+      console.log(result);
+      res.send(result);
+    });
+
+    // Update Order Payment Status
+    app.put("/paymentUpdate/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
+      const id = req.body._id;
       const transactionId = req.body.transactionId;
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
