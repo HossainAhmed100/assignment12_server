@@ -211,6 +211,25 @@ async function run() {
       res.send({ isAdmin: user?.role === "Admin" });
     });
 
+    // User Role Update API
+    app.put("/updateuserrole/:email", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.params.email) {
+        return res.status(401).send({ message: "UnAuthorized Access!" });
+      }
+      const id = req.body.id;
+      const role = req.body.roles;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          role: role,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
+
     // Approve Order
     app.put("/approveOrder/:email", verifyJWT, async (req, res) => {
       const decoded = req.decoded;
